@@ -1,95 +1,100 @@
-import React from 'react';
-import {useState, useEffect } from "react";
+import React, { useEffect, useState} from 'react';
+import {Accordion, Card, Col, Row} from "react-bootstrap";
+import { useParams} from "react-router-dom";
 import axios from "axios";
-import data from "bootstrap/js/src/dom/data";
-import {Button, Card, Form, FormControl} from "react-bootstrap";
 
-function Surah(){
-    const [chapters, setchapters] = useState()
-    const [Search, setSearch] = useState()
-    const [dataSearched, setDataSearched] = useState()
+const Surah=()=> {
+    const {id} = useParams();
+    const [namaSurah, setNamaSurah] = useState([]);
+    const [ayat, setAyat]= useState([]);
+    const [arti, setArti]=useState([]);
+    const [audioAyat, setAudioAyat]= useState([]);
+    const [audioSurah, setAudioSurah]=useState([]);
+    const [info, setInfo]=useState([]);
+    const [surah, setSurah]= useState([])
 
     useEffect(() => {
-        retrievechapters()
-    },[])
+        axios.get("https://api.quran.com/api/v4/chapters/" + id)
+            .then((res) => {
+                setNamaSurah(res.data.chapter)
+            })
+            .catch((error) => {
+                console.log(error, 'error handle nama surah')
+            })
+        axios.get("https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=" + id)
+            .then((res)=>{
+                setAyat(res.data.verses)
+            })
+            .catch((error)=>{
+                console.log(error, 'error handle ayat surah')
+            })
+        axios.get("https://api.quran.com/api/v4/quran/translations/134?chapter_number=" +id)
+            .then((res)=>{
+                setArti(res.data.translations)
+            })
+            .catch((error)=>{
+                console.log(error, 'error handle arti surah')
+            })
+        axios.get("https://api.quran.com/api/v4/quran/recitations/7?chapter_number=" +id)
+            .then((res)=>{
+                setAudioAyat(res.data.audio_files)
+            })
+            .catch((error)=>{
+                console.log(error, "error handle audio ayat")
+            })
+        axios.get("https://api.quran.com/api/v4/chapter_recitations/7/" +id)
+            .then((res)=>{
+                setAudioSurah(res.data.audio_file)
+            })
+            .catch((error)=>{
+                console.log(error, "error handle audio ayat")
+            })
+        axios.get("https://api.quran.com/api/v4/chapters/" + id + "/info?language=id")
+            .then((res)=>{
+                setInfo(res.data.chapter_info)
+            })
+            .catch((error)=>{
+                console.log(error, 'error handle info')
+            })
 
-    const retrievechapters = async  () => {
-        try{
-            const { data } = await axios.get(`https://api.quran.com/api/v4/quran/translations/174?fields=id&chapter_number=1/translations`)
-            setchapters(data)
-            // console.log(data, '<== response chapters')
-        }catch (error){
-            console.log(error, '<==error retrieve chapters')
-        }
-    }
-
-    const handleChange = (e) => {
-        // console.log(e.target.value)
-        setSearch(e.target.value)
-    }
-
-    const handleSubmit = async (e) => {
-        try{
-            e.preventDefault()
-            const {data} = await axios.get(`https://api.quran.com/api/v4/quran/translations/174?fields=id&chapter_number=1/translation_id=${Search}`)
-            // console.log(data, '<== response handle submit')
-            setDataSearched(data.translations )
-        }catch (error) {
-            console.log(error, 'error bandle submit')
-        }
-    }
+    },[id])
     return (
+        <> <p className="fs-1">
+            {namaSurah.name_arabic}</p>
+                <audio  src={audioSurah.audio_url} controls />
+            <Accordion width="20px">
+                <Accordion.Item eventKey="0">
+                    <Accordion.Header><img src="info.jpg" className="rounded float-left"  width="20px"></img> Info Surah</Accordion.Header>
+                    <Accordion.Body>
+                        <img src="translate.jpg" className="rounded float-left"  width="20px"></img>{info.source}
+                        <p className="text-primary" dangerouslySetInnerHTML={{__html: info.short_text}}/>
+                        <h3 className="text-start"><strong>Surah {namaSurah.name_arabic}</strong> </h3>
+                        <p style={{fontSize:"12px"}} className="text-start" dangerouslySetInnerHTML={{__html: info.text}}/>
+                    </Accordion.Body>
 
-        <div className="bg-light p-5 rounded">
-            <div className="col-sm-8 mx-auto">
-                <h1>Selamat Datang di API QURAN</h1>
-                <p>Silahkan mencari surah di menu "Search"</p>
-            </div>
+                </Accordion.Item>
+            </Accordion>
 
-            <div className="home">
-                <form onSubmit={handleSubmit} >
-                    <input onChange ={handleChange}
-                        // type="search"
-                        // placeholder="Search"
-                        // className="me-50"
-                        // aria-label="Search"
-                    />
-                    <button >Search</button>
-                </form>
+                {ayat.map((ayatitem, index)=>(
+                    <Card key={index} className="mt-1">
+                        <Card.Body>
+                            <Row>
 
-                <ul>
-                    {dataSearched && dataSearched.map((data, index) => {
-                        console.log(data, '<== data searched')
-                        return(
-                            // null
-                            <><br></br>
-                                <Card>
-                                    <Card.Header>Surah</Card.Header>
-                                    <Card.Body>
-                                        <Card.Text>
-                                            {data.name_arabic}<br></br>
-                                            {data.name_complex}<br></br>
-                                            {data.revelation_place}
-                                        </Card.Text>
-                                        <Button variant="primary">Go somewhere</Button>
-                                    </Card.Body>
-                                </Card>
-
-                            </>
-
-                        )
-                    })}
-                </ul>
-                {/*{JSON.stringify(dataSearched)}*/}
-                {/*<ul>*/}
-                {/*    {juzs && juzs.map((juzs, index) => (*/}
-                {/*        <li key={index} > {juzs} </li>*/}
-                {/*    ))}*/}
-                {/*</ul>*/}
-            </div>
-        </div>
-
+                                <Col sm={1}>
+                                    <span className="badge bg-primary">{ayatitem.verse_key}</span>
+                                </Col>
+                                <Col sm={11}>
+                                    <p className="text-end fs-4" dangerouslySetInnerHTML={{__html:ayatitem.text_uthmani}}/>
+                                    {arti.length? <p className="text-md-start " dangerouslySetInnerHTML={{__html:arti[index].text}} />:null}
+                                    {audioAyat.length? <audio  className="h-10 mt-2   text-end float-end" src={"https://verses.quran.com/" + audioAyat[index].url} controls color="primary" />:null}
+                                </Col>
+                            </Row>
+                        </Card.Body>
+                    </Card>
+                    ))}
+        </>
     );
 
 }
+
 export default Surah;

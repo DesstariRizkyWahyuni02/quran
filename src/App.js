@@ -2,9 +2,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import Navbarcomp from "./components/navbarcomp";
 import Home from "./components/Home";
+import HomeJuz from "./components/HomeJuz";
 import Juz from "./components/Juz";
 import Surah from "./components/Surah";
+import Profile from "./components/Profile";
 import { BrowserRouter as Router,Route,Switch} from "react-router-dom";
+
 
 
 
@@ -18,10 +21,16 @@ function App() {
                       <Route exact path ="/" exact>
                     <Home/>
                       </Route>
-                      <Route exact path ="/Juz" exact>
+                      <Route exact path ="/HomeJuz" exact>
+                          <HomeJuz/>
+                      </Route>
+                      <Route exact path ="/Profile" exact>
+                          <Profile/>
+                      </Route>
+                      <Route exact path ="/Juz:id" exact>
                           <Juz/>
                       </Route>
-                      <Route exact path ="/Surah" exact>
+                      <Route exact path ="/Surah:id" exact>
                           <Surah/>
                       </Route>
                   </Switch>

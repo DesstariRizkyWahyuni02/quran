@@ -1,95 +1,62 @@
 import React from 'react';
 import {useState, useEffect } from "react";
 import axios from "axios";
-import data from "bootstrap/js/src/dom/data";
-import {Button, Card, Form, FormControl} from "react-bootstrap";
+import { Card, Col,  Row,} from "react-bootstrap";
+import {useParams} from "react-router-dom";
 
 function Juz(){
-    const [chapters, setchapters] = useState()
-    const [Search, setSearch] = useState()
-    const [dataSearched, setDataSearched] = useState()
+    const {id} =useParams()
+    const [ayatJuz, setAyatjuz]=useState([]);
+    const [artiJuz, setArtiJuz]=useState([]);
+    const [audioJuz, setAudioJuz]=useState([]);
 
     useEffect(() => {
-        retrievechapters()
-    },[])
+        axios.get("https://api.quran.com/api/v4/quran/verses/uthmani?juz_number=" + id)
+            .then((res)=>{
+                setAyatjuz(res.data.verses)
+            })
+            .catch((error)=>{
+                console.log(error, ' error handle ayat juz')
+            })
+        axios.get("https://api.quran.com/api/v4/quran/translations/134?juz_number=" +id)
+            .then((res)=>{
+                setArtiJuz(res.data.translations)
+            })
+            .catch((error)=>{
+                console.log(error, 'error handle arti juz')
+            })
+        axios.get("https://api.quran.com/api/v4/recitations/7/by_juz/" +id + "?per_page=999999999" )
+            .then((res)=>{
+                setAudioJuz(res.data.audio_files)
+            })
+            .catch((error)=>{
+                console.log(error, "error handle audio ayat")
+            })
 
-    const retrievechapters = async  () => {
-        try{
-            const { data } = await axios.get(`https://api.quran.com/api/v4/chapters/2/info?language=id`)
-            setchapters(data)
-            // console.log(data, '<== response chapters')
-        }catch (error){
-            console.log(error, '<==error retrieve chapters')
-        }
-    }
-
-    const handleChange = (e) => {
-        // console.log(e.target.value)
-        setSearch(e.target.value)
-    }
-
-    const handleSubmit = async (e) => {
-        try{
-            e.preventDefault()
-            const {data} = await axios.get(`https://api.quran.com/api/v4/chapters/2/info?language=id/chapter_number=${Search}`)
-            // console.log(data, '<== response handle submit')
-            setDataSearched(data.chapter_info )
-        }catch (error) {
-            console.log(error, 'error bandle submit')
-        }
-    }
+    },[id])
     return (
+        <>
 
-        <div className="bg-light p-5 rounded">
-            <div className="col-sm-8 mx-auto">
-                <h1>Selamat Datang di API QURAN</h1>
-                <p>Silahkan mencari Juz di menu "Search"</p>
-            </div>
+                {ayatJuz.map((ayatitem, index)=>(
+                <Card key={index} className="mt-1">
+                    <Card.Body>
+                        <Row>
 
-            <div className="home">
-                <form onSubmit={handleSubmit} >
-                    <input onChange ={handleChange}
-                        // type="search"
-                        // placeholder="Search"
-                        // className="me-50"
-                        // aria-label="Search"
-                    />
-                    <button >Search</button>
-                </form>
-
-                <ul>
-                    {dataSearched && dataSearched.map((data, index) => {
-                        console.log(data, '<== data searched')
-                        return(
-                            // null
-                            <><br></br>
-                                <Card>
-                                    <Card.Header>Juz</Card.Header>
-                                    <Card.Body>
-                                        <Card.Text>
-                                            {data.chapter_id}<br></br>
-                                            {data.short_text}<br></br>
-                                            {/*{data.revelation_place}*/}
-                                        </Card.Text>
-                                        <Button variant="primary">Go somewhere</Button>
-                                    </Card.Body>
-                                </Card>
-
-                            </>
-
-                        )
-                    })}
-                </ul>
-                {/*{JSON.stringify(dataSearched)}*/}
-                {/*<ul>*/}
-                {/*    {juzs && juzs.map((juzs, index) => (*/}
-                {/*        <li key={index} > {juzs} </li>*/}
-                {/*    ))}*/}
-                {/*</ul>*/}
-            </div>
-        </div>
-
+                            <Col sm={1}>
+                                <span className="badge bg-primary">{ayatitem.verse_key}</span>
+                            </Col>
+                            <Col sm={11}>
+                                <p className="text-end fs-4">{ayatitem.text_uthmani}</p>
+                                {artiJuz.length? <p className="text-md-start " dangerouslySetInnerHTML={{__html:artiJuz[index].text}} />:null}
+                                {audioJuz.length? <audio  className="h-10 mt-10   text-end float-end" src={"https://verses.quran.com/" + audioJuz[index].url} controls />:null}
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
+            ))}
+        </>
     );
 
 }
+
 export default Juz;
